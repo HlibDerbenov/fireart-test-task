@@ -1,0 +1,54 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json  # keep if you want locked deps; remove this line to ignore it
+
+# Build output
+dist/
+build/
+tsconfig.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Test coverage
+coverage/
+jest-junit.xml
+.nyc_output
+
+# Docker
+db_data/
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Misc
+coverage/
+.tmp/
+*.local
+*.pid
+*.seed
+
+# IDE caches
+.cache/
+.vscode-test/

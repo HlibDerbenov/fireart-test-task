@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Docker Compose - bring up services
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: testdb
+          DB_PORT: 5432
+        run: |
+          docker-compose up -d --build
+
+      - name: Wait for Postgres to be ready
+        env:
+          DB_USER: postgres
+          DB_NAME: testdb
+        run: |
+          for i in $(seq 1 30); do
+            docker-compose exec -T db pg_isready -U "${DB_USER}" -d "${DB_NAME}" && break
+            echo "Waiting for postgres..."
+            sleep 1
+          done
+
+      - name: Install dependencies (for migrate/test)
+        run: npm ci
+
+      - name: Set env for migration and tests
+        run: |
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/testdb" >> $GITHUB_ENV
+          echo "DATABASE_SSL=false" >> $GITHUB_ENV
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+
+      - name: Run migrations
+        run: npm run migrate
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Docker Compose down
+        if: always()
+        run: docker-compose down -v

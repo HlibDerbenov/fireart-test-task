@@ -1,0 +1,136 @@
+{
+  "info": {
+    "name": "Skeleton Challenge Backend - Full",
+    "_postman_id": "skeleton-challenge-full",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth / Signup (positive)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "url": {"raw":"{{baseUrl}}/api/auth/signup"},
+        "body": {"mode":"raw","raw":"{\"email\":\"user+1@example.com\",\"password\":\"Password123\"}"}
+      }
+    },
+    {
+      "name": "Auth / Signup (duplicate - negative)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "url": {"raw":"{{baseUrl}}/api/auth/signup"},
+        "body": {"mode":"raw","raw":"{\"email\":\"user+1@example.com\",\"password\":\"Password123\"}"}
+      }
+    },
+    {
+      "name": "Auth / Login (positive)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "url": {"raw":"{{baseUrl}}/api/auth/login"},
+        "body": {"mode":"raw","raw":"{\"email\":\"user+1@example.com\",\"password\":\"Password123\"}"}
+      }
+    },
+    {
+      "name": "Auth / Login (wrong password - negative)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "url": {"raw":"{{baseUrl}}/api/auth/login"},
+        "body": {"mode":"raw","raw":"{\"email\":\"user+1@example.com\",\"password\":\"BadPass\"}"}
+      }
+    },
+    {
+      "name": "Auth / Request Reset (positive)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "url": {"raw":"{{baseUrl}}/api/auth/request-reset"},
+        "body": {"mode":"raw","raw":"{\"email\":\"user+1@example.com\"}"}
+      },
+      "response": []
+    },
+    {
+      "name": "Auth / Reset Password (use resetToken variable)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "url": {"raw":"{{baseUrl}}/api/auth/reset"},
+        "body": {"mode":"raw","raw":"{\"token\":\"{{resetToken}}\",\"newPassword\":\"NewPass123\"}"}
+      }
+    },
+    {
+      "name": "Users / Me (protected)",
+      "request": {
+        "method": "GET",
+        "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/users/me"}
+      }
+    },
+    {
+      "name": "Items / Create (protected)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/items"},
+        "body": {"mode":"raw","raw":"{\"title\":\"My item\",\"content\":\"Hello\"}"}
+      }
+    },
+    {
+      "name": "Items / List (protected)",
+      "request": {
+        "method": "GET",
+        "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/items"}
+      }
+    },
+    {
+      "name": "Items / Search (protected)",
+      "request": {
+        "method": "GET",
+        "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/items?q=My"}
+      }
+    },
+    {
+      "name": "Items / Get by ID (protected)",
+      "request": {
+        "method": "GET",
+        "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/items/{{itemId}}"}
+      }
+    },
+    {
+      "name": "Items / Update (protected)",
+      "request": {
+        "method": "PATCH",
+        "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/items/{{itemId}}"},
+        "body": {"mode":"raw","raw":"{\"title\":\"Updated title\",\"content\":\"Updated content\"}"}
+      }
+    },
+    {
+      "name": "Items / Delete (protected)",
+      "request": {
+        "method": "DELETE",
+        "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+        "url": {"raw":"{{baseUrl}}/api/items/{{itemId}}"}
+      }
+    },
+    {
+      "name": "Items / List (unauthorized - negative)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw":"{{baseUrl}}/api/items"}
+      }
+    }
+  ],
+  "variable": [
+    {"key":"baseUrl","value":"http://localhost:3000"},
+    {"key":"token","value":""},
+    {"key":"resetToken","value":""},
+    {"key":"itemId","value":""}
+  ]
+}

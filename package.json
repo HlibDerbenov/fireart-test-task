@@ -1,0 +1,50 @@
+{
+  "name": "skeleton-challenge-backend",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Test backend for Skeleton Challenge (NestJS, PostgreSQL, manual auth)",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p ./",
+    "start": "node dist/main.js",
+    "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "lint": "eslint . --ext .ts",
+    "migrate": "ts-node src/scripts/migrate.ts",
+    "test": "jest --runInBand --detectOpenHandles",
+    "test:ci": "NODE_ENV=test npm run migrate && npm run test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0",
+    "pg": "^8.11.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/pg": "^8.6.6",
+    "@types/node": "^22",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.2",
+    "eslint": "^9.13.0",
+    "ts-jest": "^29.1.0",
+    "jest": "^29.6.0",
+    "@types/jest": "^29.5.2",
+    "supertest": "^6.3.3",
+    "@types/supertest": "^2.0.12",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.5.1",
+    "@nestjs/testing": "^10.0.0"
+  }
+}
