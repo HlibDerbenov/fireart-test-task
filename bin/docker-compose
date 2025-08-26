@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Wrapper script: prefer docker-compose if installed, otherwise use "docker compose"
+
+set -eu
+
+if command -v docker-compose >/dev/null 2>&1; then
+	# Use legacy docker-compose if available
+	exec docker-compose "$@"
+elif command -v docker >/dev/null 2>&1; then
+	# Fallback to Docker CLI v2 "compose" subcommand
+	exec docker compose "$@"
+else
+	echo "Error: neither 'docker-compose' nor 'docker' (with compose) found in PATH." >&2
+	exit 127
+fi
