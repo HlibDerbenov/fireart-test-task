@@ -24,7 +24,7 @@ jobs:
           DB_NAME: testdb
           DB_PORT: 5432
         run: |
-          docker-compose up -d --build
+          docker compose up -d --build
 
       - name: Wait for Postgres to be ready
         env:
@@ -32,7 +32,7 @@ jobs:
           DB_NAME: testdb
         run: |
           for i in $(seq 1 30); do
-            docker-compose exec -T db pg_isready -U "${DB_USER}" -d "${DB_NAME}" && break
+            docker compose exec -T db pg_isready -U "${DB_USER}" -d "${DB_NAME}" && break
             echo "Waiting for postgres..."
             sleep 1
           done
@@ -57,4 +57,4 @@ jobs:
 
       - name: Docker Compose down
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
