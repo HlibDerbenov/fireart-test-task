@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
-import { PG_POOL } from '../db';
+import { PG_POOL, withTransaction } from '../db';
 import { CreateItemDto, UpdateItemDto } from './item.dto';
 
 // Concrete Item type returned by service methods
@@ -59,20 +59,15 @@ export class ItemsService {
   }
 
   async update(ownerId: number, id: number, dto: UpdateItemDto): Promise<Item> {
-    const client = await this.pool.connect();
-    try {
-      const current = await client.query('SELECT * FROM items WHERE id = $1 AND owner_id = $2', [id, ownerId]);
-      if (!current.rows[0]) throw new NotFoundException('Item not found');
-      const title = dto.title ?? current.rows[0].title;
-      const content = dto.content ?? current.rows[0].content;
-      const res = await client.query(
-        'UPDATE items SET title = $1, content = $2 WHERE id = $3 RETURNING *',
-        [title, content, id],
-      );
+    return withTransaction(async (client) => {
+      // Lock the row to avoid races
+      const currentRes = await client.query('SELECT * FROM items WHERE id = $1 AND owner_id = $2 FOR UPDATE', [id, ownerId]);
+      if (!currentRes.rows[0]) throw new NotFoundException('Item not found');
+      const title = dto.title ?? currentRes.rows[0].title;
+      const content = dto.content ?? currentRes.rows[0].content;
+      const res = await client.query('UPDATE items SET title = $1, content = $2 WHERE id = $3 RETURNING *', [title, content, id]);
       return res.rows[0] as Item;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   async remove(ownerId: number, id: number): Promise<{ ok: boolean }> {

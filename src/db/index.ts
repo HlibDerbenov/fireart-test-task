@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from 'pg';
+import { Pool, QueryResult, PoolClient } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config';
@@ -105,4 +105,23 @@ export const PgPoolProvider = {
 
 export async function closeDb(): Promise<void> {
 	await pool.end();
+}
+
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+	const client = await pool.connect();
+	try {
+		await client.query('BEGIN');
+		const result = await fn(client);
+		await client.query('COMMIT');
+		return result;
+	} catch (err) {
+		try {
+			await client.query('ROLLBACK');
+		} catch (_) {
+			// ignore rollback errors
+		}
+		throw err;
+	} finally {
+		client.release();
+	}
 }

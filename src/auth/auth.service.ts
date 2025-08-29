@@ -6,7 +6,7 @@ import { EmailService } from '../email/email.service';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 import { User } from '../common/interfaces/user.interface';
 import { Pool } from 'pg';
-import { PG_POOL } from '../db';
+import { PG_POOL, withTransaction } from '../db';
 
 @Injectable()
 export class AuthService {
@@ -119,8 +119,7 @@ export class AuthService {
       throw new BadRequestException('New password must be at least 8 characters');
     }
 
-    const client = await this.pool.connect();
-    try {
+    return withTransaction(async (client) => {
       const res = await client.query(
         `SELECT prt.id as prt_id, prt.user_id, prt.expires_at, prt.used
          FROM password_reset_tokens prt
@@ -133,18 +132,9 @@ export class AuthService {
       if (new Date(row.expires_at) < new Date()) throw new BadRequestException('Token expired');
 
       const hashed = await bcrypt.hash(newPassword, this.bcryptSaltRounds);
-      await client.query('BEGIN');
       await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hashed, row.user_id]);
       await client.query('UPDATE password_reset_tokens SET used = true WHERE id = $1', [row.prt_id]);
-      await client.query('COMMIT');
       return { ok: true };
-    } catch (err) {
-      try {
-        await client.query('ROLLBACK');
-      } catch (_) {}
-      throw err;
-    } finally {
-      client.release();
-    }
+    });
   }
 }
