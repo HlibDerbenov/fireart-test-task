@@ -26,7 +26,13 @@ export async function runMigrations(): Promise<void> {
 	}
 
 	const client = await pool.connect();
+	// Use a numeric advisory lock key shared by all processes to prevent concurrent migrations.
+	// Pick a stable constant (64-bit integer). Change if there's a need for different namespacing.
+	const ADVISORY_LOCK_KEY = 1234567890;
 	try {
+		// Acquire exclusive advisory lock (blocks until obtained)
+		await client.query('SELECT pg_advisory_lock($1)', [ADVISORY_LOCK_KEY]);
+
 		// Ensure migrations table exists
 		await client.query(`
 			CREATE TABLE IF NOT EXISTS migrations (
@@ -80,6 +86,12 @@ export async function runMigrations(): Promise<void> {
 			}
 		}
 	} finally {
+		// Always attempt to release the advisory lock before releasing the client.
+		try {
+			await client.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_KEY]);
+		} catch (_) {
+			// ignore unlock errors
+		}
 		client.release();
 	}
 }
