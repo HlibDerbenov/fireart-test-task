@@ -52,6 +52,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Run compiled migrations
+        run: node dist/scripts/migrate.js
+
       - name: Run tests
         run: npm run test
 
