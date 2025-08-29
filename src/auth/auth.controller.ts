@@ -4,26 +4,39 @@ import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestResetDto } from './dto/request-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  @ApiOperation({ summary: 'Create a new user account (signup)' })
+  @ApiResponse({ status: 201, description: 'User created' })
+  @ApiResponse({ status: 400, description: 'Validation error / email exists' })
   @Post('signup')
   async signup(@Body() body: SignupDto) {
     return this.auth.signup(body.email, body.password);
   }
 
+  @ApiOperation({ summary: 'Login and receive JWT token' })
+  @ApiResponse({ status: 201, description: 'Returns { token } on success' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
   async login(@Body() body: LoginDto) {
     return this.auth.login(body.email, body.password);
   }
 
+  @ApiOperation({ summary: 'Request password reset (sends token by email)' })
+  @ApiResponse({ status: 201, description: 'Password reset requested (token sent if user exists)' })
   @Post('request-reset')
   async requestReset(@Body() body: RequestResetDto) {
     return this.auth.requestPasswordReset(body.email);
   }
 
+  @ApiOperation({ summary: 'Reset password using the reset token' })
+  @ApiResponse({ status: 201, description: 'Password reset successful' })
+  @ApiResponse({ status: 400, description: 'Invalid/expired token or validation error' })
   @Post('reset')
   async reset(@Body() body: ResetPasswordDto) {
     return this.auth.resetPassword(body.token, body.newPassword);
