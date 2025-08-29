@@ -5,6 +5,8 @@ import { LoginDto } from './dto/login.dto';
 import { RequestResetDto } from './dto/request-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UserResponseDto } from '../users/dto/user.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -12,7 +14,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @ApiOperation({ summary: 'Create a new user account (signup)' })
-  @ApiResponse({ status: 201, description: 'User created' })
+  @ApiResponse({ status: 201, description: 'User created', type: UserResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error / email exists' })
   @Post('signup')
   async signup(@Body() body: SignupDto) {
@@ -20,7 +22,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Login and receive JWT token' })
-  @ApiResponse({ status: 201, description: 'Returns { token } on success' })
+  @ApiResponse({ status: 201, description: 'Returns { token } on success', type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
   async login(@Body() body: LoginDto) {

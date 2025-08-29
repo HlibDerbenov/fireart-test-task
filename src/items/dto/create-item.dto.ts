@@ -1,11 +1,14 @@
 import { IsString, IsOptional, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateItemDto {
-  @IsString()
-  @MinLength(1)
-  title!: string;
+	@ApiProperty({ example: 'My item' })
+	@IsString()
+	@MinLength(1)
+	title!: string;
 
-  @IsOptional()
-  @IsString()
-  content?: string;
+	@ApiPropertyOptional({ example: 'Hello world' })
+	@IsOptional()
+	@IsString()
+	content?: string;
 }

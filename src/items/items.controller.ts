@@ -3,6 +3,7 @@ import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ItemResponseDto } from './dto/item.dto';
 
 @ApiTags('items')
 @ApiBearerAuth()
@@ -11,14 +12,14 @@ export class ItemsController {
   constructor(private readonly items: ItemsService) {}
 
   @ApiOperation({ summary: 'List items for the authenticated user (optional search q param)' })
-  @ApiResponse({ status: 200, description: 'Array of items' })
+  @ApiResponse({ status: 200, description: 'Array of items', type: ItemResponseDto, isArray: true })
   @Get()
   async list(@Req() req: any, @Query('q') q?: string) {
     return this.items.search(req.user.id, q);
   }
 
   @ApiOperation({ summary: 'Create a new item' })
-  @ApiResponse({ status: 201, description: 'Item created' })
+  @ApiResponse({ status: 201, description: 'Item created', type: ItemResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Post()
   async create(@Req() req: any, @Body() body: CreateItemDto) {
@@ -26,7 +27,7 @@ export class ItemsController {
   }
 
   @ApiOperation({ summary: 'Get item by id' })
-  @ApiResponse({ status: 200, description: 'Item' })
+  @ApiResponse({ status: 200, description: 'Item', type: ItemResponseDto })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Get(':id')
   async get(@Req() req: any, @Param('id') id: string) {
@@ -34,7 +35,7 @@ export class ItemsController {
   }
 
   @ApiOperation({ summary: 'Update item by id' })
-  @ApiResponse({ status: 200, description: 'Updated item' })
+  @ApiResponse({ status: 200, description: 'Updated item', type: ItemResponseDto })
   @ApiResponse({ status: 404, description: 'Not found' })
   @Patch(':id')
   async update(@Req() req: any, @Param('id') id: string, @Body() body: UpdateItemDto) {
