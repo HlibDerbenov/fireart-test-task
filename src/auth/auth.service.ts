@@ -1,15 +1,19 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { pool } from '../db';
+import { Injectable, UnauthorizedException, BadRequestException, Inject } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 import { User } from '../common/interfaces/user.interface';
+import { Pool } from 'pg';
+import { PG_POOL } from '../db';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly emailService: EmailService) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly emailService: EmailService,
+  ) {}
 
   // Configurable via environment for better security in different environments
   private jwtSecret = process.env.JWT_SECRET || 'secret';
@@ -45,7 +49,7 @@ export class AuthService {
   // Signup: create user with hashed password
   async signup(email: string, password: string): Promise<User> {
     this.validateCredentials(email, password);
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const hashed = await bcrypt.hash(password, this.bcryptSaltRounds);
       const res = await client.query(
@@ -67,7 +71,7 @@ export class AuthService {
   // Login: validate password and return JWT
   async login(email: string, password: string) {
     if (!email || !password) throw new BadRequestException('Email and password are required');
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const res = await client.query('SELECT id, email, password_hash FROM users WHERE email = $1', [email.toLowerCase().trim()]);
       const user = res.rows[0] as (User & { password_hash: string }) | undefined;
@@ -84,7 +88,7 @@ export class AuthService {
   // Request password reset: create token (store raw token) with expiry
   async requestPasswordReset(email: string) {
     if (!email || typeof email !== 'string') throw new BadRequestException('Email is required');
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const res = await client.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
       const user = res.rows[0];
@@ -115,7 +119,7 @@ export class AuthService {
       throw new BadRequestException('New password must be at least 8 characters');
     }
 
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const res = await client.query(
         `SELECT prt.id as prt_id, prt.user_id, prt.expires_at, prt.used

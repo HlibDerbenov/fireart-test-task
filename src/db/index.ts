@@ -84,6 +84,13 @@ export async function runMigrations(): Promise<void> {
 	}
 }
 
+export const PG_POOL = Symbol('PG_POOL');
+
+export const PgPoolProvider = {
+	provide: PG_POOL,
+	useValue: pool,
+};
+
 export async function closeDb(): Promise<void> {
 	await pool.end();
 }

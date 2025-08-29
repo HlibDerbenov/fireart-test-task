@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { pool } from '../db';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Pool } from 'pg';
+import { PG_POOL } from '../db';
 import { CreateItemDto, UpdateItemDto } from './item.dto';
 
 // Concrete Item type returned by service methods
@@ -13,8 +14,10 @@ type Item = {
 
 @Injectable()
 export class ItemsService {
+  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+
   async create(ownerId: number, dto: CreateItemDto): Promise<Item> {
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const res = await client.query(
         'INSERT INTO items (owner_id, title, content) VALUES ($1, $2, $3) RETURNING id, owner_id, title, content, created_at',
@@ -27,7 +30,7 @@ export class ItemsService {
   }
 
   async findOne(ownerId: number, id: number): Promise<Item> {
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const res = await client.query('SELECT * FROM items WHERE id = $1 AND owner_id = $2', [id, ownerId]);
       const row = res.rows[0];
@@ -39,7 +42,7 @@ export class ItemsService {
   }
 
   async search(ownerId: number, q?: string): Promise<Item[]> {
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       if (!q) {
         const res = await client.query('SELECT * FROM items WHERE owner_id = $1 ORDER BY created_at DESC', [ownerId]);
@@ -56,7 +59,7 @@ export class ItemsService {
   }
 
   async update(ownerId: number, id: number, dto: UpdateItemDto): Promise<Item> {
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const current = await client.query('SELECT * FROM items WHERE id = $1 AND owner_id = $2', [id, ownerId]);
       if (!current.rows[0]) throw new NotFoundException('Item not found');
@@ -73,7 +76,7 @@ export class ItemsService {
   }
 
   async remove(ownerId: number, id: number): Promise<{ ok: boolean }> {
-    const client = await pool.connect();
+    const client = await this.pool.connect();
     try {
       const res = await client.query('DELETE FROM items WHERE id = $1 AND owner_id = $2 RETURNING *', [id, ownerId]);
       if (!res.rows[0]) throw new NotFoundException('Item not found');
