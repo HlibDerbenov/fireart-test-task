@@ -19,31 +19,30 @@ jobs:
 
       - name: Docker Compose - bring up services
         env:
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: testdb
-          DB_PORT: 5432
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           docker compose up -d --build
 
       - name: Wait for Postgres to be ready
-        env:
-          DB_USER: postgres
-          DB_NAME: testdb
         run: |
           for i in $(seq 1 30); do
-            docker compose exec -T db pg_isready -U "${DB_USER}" -d "${DB_NAME}" && break
+            docker compose exec -T db pg_isready -U "${{ secrets.DB_USER }}" -d "${secrets.DB_NAME}" && break
             echo "Waiting for postgres..."
             sleep 1
           done
 
       - name: Install dependencies (for migrate/test)
-        run: npm ci
+        # Use legacy peer deps to avoid ERESOLVE in CI environment
+        run: npm ci --legacy-peer-deps
 
       - name: Set env for migration and tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL: ${{ secrets.DATABASE_SSL }}
         run: |
-          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/testdb" >> $GITHUB_ENV
-          echo "DATABASE_SSL=false" >> $GITHUB_ENV
+          echo "DATABASE_URL=${{ env.DATABASE_URL }}" >> $GITHUB_ENV
+          echo "DATABASE_SSL=${{ env.DATABASE_SSL }}" >> $GITHUB_ENV
           echo "NODE_ENV=test" >> $GITHUB_ENV
 
       - name: Run migrations
