@@ -5,6 +5,9 @@ import * as jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
+type JwtPayload = { userId: number | string; email: string | unknown; iat?: number; exp?: number };
+type AuthRequest = Request & { user?: { id: number; email: string } };
+
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -15,7 +18,7 @@ export class JwtAuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    const req = context.switchToHttp().getRequest<Request>();
+    const req = context.switchToHttp().getRequest<AuthRequest>();
 
     // Treat auth routes as public by default (signup/login/reset)
     const reqPath = (req.originalUrl || req.url || req.path || '').toString();
@@ -35,11 +38,11 @@ export class JwtAuthGuard implements CanActivate {
 
     const token = parts[1];
     try {
-      const payload = jwt.verify(token, config.JWT_SECRET) as Record<string, any>;
-      // attach the decoded token payload to request for downstream use
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Express Request may not have user typed
-      req.user = payload;
+      const payloadRaw = jwt.verify(token, config.JWT_SECRET);
+      const payload = payloadRaw as JwtPayload;
+      const id = typeof payload.userId === 'string' ? Number(payload.userId) : payload.userId;
+      const email = String(payload.email);
+      req.user = { id, email };
       return true;
     } catch (err) {
       // invalid or expired token -> 401

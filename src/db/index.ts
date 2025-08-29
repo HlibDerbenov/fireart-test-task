@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, QueryResult } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config';
@@ -42,7 +42,7 @@ export async function runMigrations(): Promise<void> {
 
 		for (const file of files) {
 			const name = file;
-			const already = await client.query('SELECT 1 FROM migrations WHERE name = $1', [name]);
+			const already = await client.query('SELECT 1 FROM migrations WHERE name = $1', [name]) as QueryResult<Record<string, unknown>>;
 			// Use safe check: already?.rowCount may be undefined/null in some typings — default to 0
 			if ((already?.rowCount ?? 0) > 0) {
 				continue; // already applied
@@ -57,7 +57,7 @@ export async function runMigrations(): Promise<void> {
 				await client.query('INSERT INTO migrations (name) VALUES ($1)', [name]);
 				await client.query('COMMIT');
 				console.info(`Migration applied: ${name}`);
-			} catch (err) {
+			} catch (err: unknown) {
 				await client.query('ROLLBACK');
 				console.error(`Failed to apply migration ${name}`, err);
 				throw err;

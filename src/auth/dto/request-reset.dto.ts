@@ -1,5 +1,6 @@
-import { EmailDto } from '../../common/base.dto';
+import { IsEmail } from 'class-validator';
 
-export class RequestResetDto extends EmailDto {
-  // email property and its @IsEmail decorator are inherited from EmailDto
+export class RequestResetDto {
+	@IsEmail()
+	email!: string;
 }

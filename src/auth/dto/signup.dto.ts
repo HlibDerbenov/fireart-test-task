@@ -1,5 +1,10 @@
-import { CredentialsDto } from '../../common/base.dto';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
-export class SignupDto extends CredentialsDto {
-  // email and password are defined/validated in CredentialsDto
+export class SignupDto {
+	@IsEmail()
+	email!: string;
+
+	@IsString()
+	@MinLength(8)
+	password!: string;
 }

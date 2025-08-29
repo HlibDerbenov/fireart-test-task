@@ -5,6 +5,7 @@ import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
 import type { Secret, SignOptions } from 'jsonwebtoken';
+import { User } from '../common/interfaces/user.interface';
 
 @Injectable()
 export class AuthService {
@@ -19,10 +20,8 @@ export class AuthService {
   // create JWT for user
   signToken(payload: { userId: number; email: string }) {
     const secret: Secret = this.jwtSecret as Secret;
-    // ensure TypeScript accepts both numeric and string expiry values by casting to SignOptions
     const options = { expiresIn: this.tokenExpiry } as unknown as SignOptions;
-    // cast payload to any to avoid strict payload typing issues from jsonwebtoken types
-    return jwt.sign(payload as any, secret, options);
+    return jwt.sign(payload, secret, options);
   }
 
   // verify incoming JWT
@@ -44,7 +43,7 @@ export class AuthService {
   }
 
   // Signup: create user with hashed password
-  async signup(email: string, password: string) {
+  async signup(email: string, password: string): Promise<User> {
     this.validateCredentials(email, password);
     const client = await pool.connect();
     try {
@@ -53,9 +52,10 @@ export class AuthService {
         'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
         [email.toLowerCase().trim(), hashed],
       );
-      return res.rows[0];
-    } catch (err: any) {
-      if (err?.code === '23505') {
+      return res.rows[0] as User;
+    } catch (err: unknown) {
+      const pgErr = err as { code?: string };
+      if (pgErr.code === '23505') {
         throw new BadRequestException('Email already exists');
       }
       throw err;
@@ -70,7 +70,7 @@ export class AuthService {
     const client = await pool.connect();
     try {
       const res = await client.query('SELECT id, email, password_hash FROM users WHERE email = $1', [email.toLowerCase().trim()]);
-      const user = res.rows[0];
+      const user = res.rows[0] as (User & { password_hash: string }) | undefined;
       if (!user) throw new UnauthorizedException('Invalid credentials');
       const ok = await bcrypt.compare(password, user.password_hash);
       if (!ok) throw new UnauthorizedException('Invalid credentials');

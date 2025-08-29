@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, QueryResult } from 'pg';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -39,7 +39,7 @@ pool.on('error', (err) => {
 });
 
 // Lightweight query helper so other modules can use a single import
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: unknown[]): Promise<QueryResult<Record<string, unknown>>> {
   return pool.query(text, params);
 }
 

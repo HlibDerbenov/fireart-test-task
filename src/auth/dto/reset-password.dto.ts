@@ -1,7 +1,10 @@
-import { IsString } from 'class-validator';
-import { NewPasswordDto } from '../../common/base.dto';
+import { IsString, MinLength } from 'class-validator';
 
-export class ResetPasswordDto extends NewPasswordDto {
-  @IsString()
-  token!: string;
+export class ResetPasswordDto {
+	@IsString()
+	token!: string;
+
+	@IsString()
+	@MinLength(8)
+	newPassword!: string;
 }

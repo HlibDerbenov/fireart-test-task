@@ -2,6 +2,8 @@ import request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
+import type { Server } from 'http';
+
 dotenv.config();
 
 import { AppModule } from '../src/app.module';
@@ -12,7 +14,7 @@ jest.setTimeout(30000);
 
 describe('Items + Users "me" integration (e2e)', () => {
   let app: INestApplication;
-  let httpServer: any;
+  let httpServer: Server;
 
   beforeAll(async () => {
     // Ensure schema is applied
@@ -26,7 +28,7 @@ describe('Items + Users "me" integration (e2e)', () => {
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
-    httpServer = app.getHttpServer();
+    httpServer = app.getHttpServer() as Server;
   });
 
   afterAll(async () => {
@@ -65,7 +67,7 @@ describe('Items + Users "me" integration (e2e)', () => {
     // List items
     const listRes = await request(httpServer).get('/api/items').set('Authorization', `Bearer ${token}`).expect(200);
     expect(Array.isArray(listRes.body)).toBeTruthy();
-    expect(listRes.body.find((it: any) => String(it.id) === itemId)).toBeDefined();
+    expect(listRes.body.find((it: unknown) => String((it as Record<string, unknown>).id) === itemId)).toBeDefined();
 
     // Search items by q
     const searchRes = await request(httpServer).get('/api/items').query({ q: 'My' }).set('Authorization', `Bearer ${token}`).expect(200);

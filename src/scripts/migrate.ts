@@ -12,9 +12,10 @@ export async function runMigrations() {
       // eslint-disable-next-line no-console
       console.log('Database is available');
       break;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = (err instanceof Error) ? err.message : String(err);
       // eslint-disable-next-line no-console
-      console.log(`DB not ready yet (attempt ${i + 1}/${retries}): ${err.message || err}`);
+      console.log(`DB not ready yet (attempt ${i + 1}/${retries}): ${msg}`);
       await new Promise((r) => setTimeout(r, delayMs));
       if (i === retries - 1) throw new Error('Database not ready after retries');
     }
