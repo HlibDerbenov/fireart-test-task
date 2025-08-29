@@ -22,18 +22,18 @@ Status — requirements checklist
 - Tests and CI: Integration tests included; CI workflow present.
 
 Quick start (dockerized Postgres)
-1. Copy `.env.example` -> `.env` and set values (DATABASE_URL or DB_*). Ensure JWT_SECRET is set.
+1. Copy `.env.example` -> `.env` and set values. IMPORTANT: you must set DATABASE_URL (see env table below) and JWT_SECRET.
 2. Start services:
    - `docker-compose up --build -d`
 3. Option A — let app run migrations automatically (entrypoint); Option B — run migrations manually:
    - `npm ci`
    - `npm run migrate`
-4. Start app (if not running inside compose):
+4. Optionally start app locally (if not running inside compose):
    - `npm run start:dev`
 5. API base: `http://localhost:3000/api`
 
 Quick start (local)
-1. Copy `.env.example` -> `.env` and set `DATABASE_URL` to a reachable Postgres.
+1. Copy `.env.example` -> `.env` and set `DATABASE_URL` to a reachable Postgres connection string (REQUIRED).
 2. `npm ci`
 3. `npm run migrate`
 4. `npm run start:dev`
@@ -159,3 +159,65 @@ If anything is unclear or you'd like:
 - A deploy manifest for Render/Fly
 
 Then tell me which and I will add it.
+
+## Environment variables
+
+Below are the environment variables used by the app. You MUST provide DATABASE_URL. The DB_* variables are not used to build the connection string by the app — provide DATABASE_URL explicitly in your `.env` or host environment.
+
+- DATABASE_URL — REQUIRED — full Postgres connection string, e.g. `postgres://user:pass@db:5432/testdb`
+- DATABASE_SSL — optional (true/false) — enable SSL for managed PG
+- JWT_SECRET — REQUIRED — secret used to sign JWTs (no default)
+- PORT — optional (default: 3000)
+- RESET_TOKEN_EXPIRY_MINUTES — optional (default: 30)
+- SALT_ROUNDS — optional (default: 12)
+- PG_MAX_CLIENTS — optional (default: 10)
+- PG_IDLE_TIMEOUT_MS — optional (default: 30000)
+- PG_CONN_TIMEOUT_MS — optional (default: 2000)
+- MIGRATE_RETRIES — optional (migration runner DB wait retries, default: 30)
+- MIGRATE_SLEEP_MS — optional (migration runner wait between retries, default: 1000)
+- NODE_ENV — optional (set to `test` to enable test truncation behavior)
+
+Tip: When running via Docker Compose, make sure your `.env` or the compose environment sets DATABASE_URL explicitly (do not rely on the app to synthesize it from DB_* variables).
+
+## Migrations (detailed)
+
+Migrations are plain SQL files in the `migrations/` directory and are applied by the built-in runner.
+
+- Run migrations locally (waits for DB readiness):
+  - npm run migrate
+- Run migrations from built JS (after build):
+  - node dist/scripts/migrate.js
+- In Docker Compose the app/entrypoint runs migrations on startup when the DB is healthy.
+- The runner uses a Postgres advisory lock (pg_advisory_lock) to avoid concurrent migration runs when multiple instances start simultaneously.
+- Test mode: when NODE_ENV=test the runner truncates data tables after applying migrations so tests run against a clean DB.
+
+Example: Quick local migration and start
+1. Copy `.env.example` -> `.env` and set values (ensure JWT_SECRET).
+2. npm ci
+3. npm run migrate
+4. npm run start:dev
+
+Docker-compose (recommended for local dev)
+1. Copy `.env.example` -> `.env` and set values
+2. docker-compose up --build
+   - The app will wait for the DB and run migrations automatically before starting.
+
+## CI instructions (recommended)
+
+Ensure migrations are applied before test or deploy steps. Example GitHub Actions step (conceptual):
+
+- name: Run migrations and tests
+  run: |
+    npm ci
+    npm run build
+    node dist/scripts/migrate.js     # ensure schema is up-to-date
+    npm run test
+
+Notes
+- In CI you may prefer to run migrations once in a dedicated job or use `pg_try_advisory_lock` semantics for non-blocking coordination.
+- Integration tests in this repo set NODE_ENV=test; the migration runner truncates tables in that mode to ensure deterministic tests.
+    npm run test
+
+Notes
+- In CI you may prefer to run migrations once in a dedicated job or use `pg_try_advisory_lock` semantics for non-blocking coordination.
+- Integration tests in this repo set NODE_ENV=test; the migration runner truncates tables in that mode to ensure deterministic tests.
