@@ -1,25 +1,25 @@
-#!/bin/sh
-# Wait for DB and run migrations, then start the app.
-# This script is intended to run inside the application container.
+#!/usr/bin/env sh
+set -eu
 
-set -e
+# Move to app dir (Dockerfile sets WORKDIR but be explicit)
+cd /usr/src/app
 
-RETRIES=${MIGRATE_RETRIES:-30}
-SLEEP=${MIGRATE_SLEEP_SEC:-2}
+echo "==> Running migrations (npm run migrate)"
+# Run migrations; fail the container if migrations fail
+npm run migrate
 
-echo "Entrypoint: waiting for database and running migrations (retries=${RETRIES}, sleep=${SLEEP}s)..."
+echo "==> Starting application"
+# Prefer running the compiled dist if available
+if [ -f ./dist/main.js ]; then
+  exec node ./dist/main.js
+fi
 
-i=0
-until [ "$i" -ge "$RETRIES" ]; do
-  i=$((i + 1))
-  echo "Attempt $i/$RETRIES: running migrations..."
-  # Prefer compiled migration runner if present
-  if [ -f ./dist/scripts/migrate.js ]; then
-    node ./dist/scripts/migrate.js && break || true
-  else
-    npm run migrate && break || true
-  fi
-  echo "Migrations not ready yet, sleeping ${SLEEP}s..."
+# Fallback to common npm start scripts
+if npm run start:prod >/dev/null 2>&1; then
+  exec npm run start:prod
+fi
+
+exec npm start
   sleep "$SLEEP"
 done
 
