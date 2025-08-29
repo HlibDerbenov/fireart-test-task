@@ -80,4 +80,5 @@ export async function initDb() {
 export async function closeDb() {
   await pool.end();
 }
-   
+
+export * from './db/index';

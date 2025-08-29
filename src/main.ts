@@ -5,6 +5,8 @@ import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
 import { initDb } from './db';
 import { ValidationPipe } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt.guard';
 
 dotenv.config();
 
@@ -15,8 +17,12 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.use(json());
 
-  // Validate & transform incoming requests using DTOs and class-validator
+  // Validate & transform incoming requests using DTOs and class-validator — global enforcement
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  // Fail-closed auth: protect all routes by default.
+  // Use @Public() decorator to allow anonymous access to specific endpoints (signup/login/reset).
+  app.useGlobalGuards(new JwtAuthGuard(new Reflector()));
 
   const port = Number(config.PORT);
 

@@ -1,32 +1,33 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { pool, runMigrations } from '../db/index';
+import { pool, runMigrations as dbRunMigrations } from '../db';
 
-// Wait for DB readiness with retries (reuses the shared pool)
-async function waitForDb(retries = 30, delayMs = 1000) {
+export async function runMigrations() {
+  const retries = 30;
+  const delayMs = 1000;
   for (let i = 0; i < retries; i++) {
     try {
       await pool.query('SELECT 1');
       // eslint-disable-next-line no-console
       console.log('Database is available');
-      return;
+      break;
     } catch (err: any) {
       // eslint-disable-next-line no-console
       console.log(`DB not ready yet (attempt ${i + 1}/${retries}): ${err.message || err}`);
-      // wait
       await new Promise((r) => setTimeout(r, delayMs));
+      if (i === retries - 1) throw new Error('Database not ready after retries');
     }
   }
-  throw new Error(`Database not ready after ${retries} attempts`);
+
+  await dbRunMigrations();
 }
 
+// CLI entry
 export async function migrateCli() {
-  await waitForDb(Number(process.env.MIGRATE_RETRIES ?? 30), Number(process.env.MIGRATE_SLEEP_MS ?? 1000));
   await runMigrations();
 }
 
-// If executed directly (npm run migrate using ts-node / node after build), run and exit with proper status.
 if (require.main === module) {
   migrateCli()
     .then(() => {

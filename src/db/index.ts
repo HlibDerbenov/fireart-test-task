@@ -63,7 +63,27 @@ export async function runMigrations(): Promise<void> {
 				throw err;
 			}
 		}
+
+		// If running tests, ensure DB is clean: truncate data tables so tests start with empty state.
+		if (process.env.NODE_ENV === 'test') {
+			console.info('Test environment detected — truncating data tables for clean test runs.');
+			// Truncate child tables first or use CASCADE. Restart identities to reset SERIALs.
+			await client.query('BEGIN');
+			try {
+				await client.query('TRUNCATE TABLE password_reset_tokens, items, users RESTART IDENTITY CASCADE');
+				await client.query('COMMIT');
+				console.info('Test truncation complete.');
+			} catch (err) {
+				await client.query('ROLLBACK');
+				console.error('Failed to truncate tables for test environment', err);
+				throw err;
+			}
+		}
 	} finally {
 		client.release();
 	}
+}
+
+export async function closeDb(): Promise<void> {
+	await pool.end();
 }
