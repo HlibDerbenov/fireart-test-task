@@ -1,16 +1,7 @@
-import { IsOptional, IsString } from 'class-validator';
 import { ItemBaseDto } from '../common/base.dto';
+import { PartialType } from '@nestjs/mapped-types';
 
 // CreateItemDto: reuse shared ItemBaseDto
 export class CreateItemDto extends ItemBaseDto {}
 
-// UpdateItemDto: partial update — mark fields optional
-export class UpdateItemDto {
-  @IsOptional()
-  @IsString()
-  title?: string;
-
-  @IsOptional()
-  @IsString()
-  content?: string;
-}
+export class UpdateItemDto extends PartialType(ItemBaseDto) {}
