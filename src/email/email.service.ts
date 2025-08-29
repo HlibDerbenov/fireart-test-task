@@ -5,7 +5,6 @@ export class EmailService {
   // Simulate sending a password reset email.
   // In production replace this with an SMTP/sendgrid/etc provider implementation.
   async sendPasswordReset(email: string, token: string) {
-    // eslint-disable-next-line no-console
     console.log(`Sending password reset to ${email}: token=${token}`);
     if (process.env.NODE_ENV === 'test') {
       this.lastSent[email] = { token, sentAt: new Date().toISOString() };

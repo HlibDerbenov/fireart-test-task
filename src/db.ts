@@ -34,7 +34,6 @@ export const pool = new Pool({
 
 // Global error handler to avoid silent pool crashes
 pool.on('error', (err) => {
-  // eslint-disable-next-line no-console
   console.error('Unexpected error on idle PG client', err);
 });
 
@@ -58,17 +57,14 @@ export async function initDb() {
     if (fs.existsSync(migrationsDir)) {
       const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql'));
       if (files.length > 0) {
-        // eslint-disable-next-line no-console
         console.log(
           'Migrations detected in migrations/*.sql. Run `npm run migrate` to apply schema changes. initDb will NOT create tables.',
         );
       } else {
-        // eslint-disable-next-line no-console
         console.log('No migration files found in migrations/. If you expect the schema, add SQL files or run migrations.');
       }
     } else {
       // No migrations folder — helpful note for devs
-      // eslint-disable-next-line no-console
       console.log('No migrations directory found. If you need automatic schema creation, add migrations or run SQL manually.');
     }
   } finally {
