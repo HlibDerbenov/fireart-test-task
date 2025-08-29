@@ -7,7 +7,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthUser } from '../common/types/auth-request';
 
 @ApiTags('users')
-@ApiBearerAuth()
+@ApiBearerAuth('bearerAuth')
 @Controller('users')
 export class UsersController {
   constructor(private readonly users: UsersService) {}

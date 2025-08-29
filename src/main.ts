@@ -12,21 +12,19 @@ dotenv.config();
 // Ensure config is validated before application starts
 import { config } from './config';
 
-// Add JWT guard (protect routes by default)
-import { Reflector } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/jwt.guard';
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
   app.use(json());
 
+  app.enableCors({
+    origin: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  });
+
   // Validate & transform incoming requests using DTOs and class-validator
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
-  // Fail-closed auth: protect all routes by default.
-  // Use @Public() decorator to allow anonymous access to specific endpoints (signup/login/reset).
-  app.useGlobalGuards(new JwtAuthGuard(new Reflector()));
 
   // Swagger / OpenAPI
   const swaggerConfig = new DocumentBuilder()

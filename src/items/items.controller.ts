@@ -8,7 +8,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthUser } from '../common/types/auth-request';
 
 @ApiTags('items')
-@ApiBearerAuth()
+@ApiBearerAuth('bearerAuth')
 @Controller('items')
 export class ItemsController {
   constructor(private readonly items: ItemsService) {}
