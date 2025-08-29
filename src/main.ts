@@ -8,6 +8,8 @@ import { ValidationPipe } from '@nestjs/common';
 
 dotenv.config();
 
+import { config } from './config';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
@@ -16,7 +18,7 @@ async function bootstrap() {
   // Validate & transform incoming requests using DTOs and class-validator
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  const port = Number(config.PORT);
 
   // Initialize DB (creates tables/indexes if missing)
   await initDb();
