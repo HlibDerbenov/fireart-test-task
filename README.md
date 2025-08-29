@@ -101,8 +101,15 @@ Negative / edge cases to verify
 - Use expired/reset token -> 400
 - Invalid DTOs (short password, bad email) -> 400
 
-Postman
-- Use `postman_collection.json` at repo root. Set collection variables: baseUrl, token, resetToken, itemId. Consider adding pre-request/test scripts to extract token/itemId.
+API documentation
+- Swagger UI: http://localhost:3000/api/docs (or http://<host>:<PORT>/api/docs). Use the "Authorize" button and paste a Bearer token to try protected endpoints.
+
+Postman collection
+- A Postman collection is included in docs/postman_collection.json. Import it into Postman to run the provided positive & negative test cases.
+
+Notes
+- The app uses JWT Bearer auth; tokens are returned by POST /api/auth/login.
+- Migrations: use `npm run migrate` or the app entrypoint (container) runs migrations on startup.
 
 TODO / Improvements
 
